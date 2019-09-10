@@ -19,18 +19,39 @@ namespace HelloWorld
             //string description;
             //bool haveSeen;
 
-            while (true)
+            var quit = false;
+            while (!quit)
             {
                 char input = DisplayMenu ();
-                if (input == 'A')
-                    AddMovie ();
-                else if (input == 'D')
-                    DisplayMovie ();
-                else if (input == 'Q')
-                    break;
+                switch (input)
+                {
+                    //Fallthrough allowed only if case is empty
+                    case 'a':
+                    case 'A': AddMovie (); break;
+
+                    //Must have break/return at end of each case
+                    case 'D': DisplayMovie (); break;
+                    case 'R': RemoveMovie (); break;
+                    case 'Q':
+                    {
+                        quit = true;
+                        break;
+                    }
+                    
+                    default: Console.WriteLine("Not supported"); break;
+                };
+                //if (input == 'A')
+                //    AddMovie ();
+                //else if (input == 'D')
+                //    DisplayMovie ();
+                //else if (input == 'R')
+                //    RemoveMovie ();
+                //else if (input == 'Q')
+                //    break;
             };
 
         }
+
 
         static void AddMovie()
         {
@@ -53,8 +74,25 @@ namespace HelloWorld
             hasSeen = ReadBoolean ("Have seen? ");
         }
 
+        private static void RemoveMovie ()
+        {
+            //Confirm removal
+            //Please DON'T do this expression == true, expression
+            if (!ReadBoolean ($"Are you sure you want to remove {title}?: "))
+                return;
+
+            //Remove movie
+            title = null;
+        }
+
         static void DisplayMovie()
         {
+            //Display message if no movies
+            if (String.IsNullOrEmpty (title))
+            {
+                Console.WriteLine ("No movies.");
+                return;
+            };
             //Title, description, release year, run length, hasSeen
             Console.WriteLine (title);
             Console.WriteLine (description);
@@ -64,7 +102,7 @@ namespace HelloWorld
             Console.WriteLine ("Released " + releaseYear);
 
             //2) Printf
-            //Console.WriteLine ("Run tim: {0}", runLength);
+            //Console.WriteLine ("Run time: {0}", runLength);
 
             //3) String formatting
             var formattedString = String.Format ("Run time: {0}", runLength);
@@ -72,6 +110,8 @@ namespace HelloWorld
 
             //4) String interpolation
             Console.WriteLine ($"Seen it? {hasSeen}");
+
+            Console.WriteLine ("".PadLeft(50, '-'));
         }
 
         static int ReadInt32(string message)
@@ -115,6 +155,7 @@ namespace HelloWorld
             {
                 Console.WriteLine ("A)dd Movie");
                 Console.WriteLine ("D)isplay Movie");
+                Console.WriteLine ("R)emove Movie");
                 Console.WriteLine ("Q)uit");
 
                 string input = Console.ReadLine ();
@@ -123,13 +164,16 @@ namespace HelloWorld
                 input = input.ToLower ();
                 //if (input == "A" || input == "a")
                 //if (input == "a")
-                if (String.Compare(input, "a", true) == 0)
+                if (String.Compare (input, "a", true) == 0)
                 {
                     return 'A';
-                } 
-                else if (input == "d")
+                } else if (input == "d")
                 {
                     return 'D';
+                }
+                else if (input == "r")
+                {
+                    return 'R';
                 }
                 else if (input == "q")
                 {
@@ -174,7 +218,9 @@ namespace HelloWorld
 
         static void DemoArithmetic ()
         {
+            Int32 hours2;
             int hours = 8;
+            hours2 = hours;
             double payRate = 15.25;
 
             double totalPay = hours * payRate;
@@ -260,6 +306,31 @@ namespace HelloWorld
             
 
             string[] nameParts = name.Split (' ');
+        }
+
+        static void DemoString ()
+        {
+            string str = null;
+
+            //Checking for null
+            if (str != null)
+                str = str.ToLower ();
+
+            //Checking for null or empty string
+            if (str != null && str != "")
+                str = str.ToLower ();
+
+            //Length - NO
+            if (str != null && str.Length == 0)
+                str = str.ToLower ();
+
+            //Empty - NO
+            if (str != null && str != String.Empty)
+                str = str.ToLower ();
+
+            //Correct approach
+            if (!String.IsNullOrEmpty(str))
+                str = str.ToLower ();
         }
 
         //Don't do this outside Lab 1
