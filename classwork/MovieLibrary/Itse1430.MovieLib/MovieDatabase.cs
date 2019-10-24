@@ -1,92 +1,89 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Itse1430.MovieLib
 {
-    /// <summary> Manages the movies in a database.</summary>
-    public class MovieDatabase
+    /// <summary>Manages the movies in a database.</summary>
+    public abstract class MovieDatabase : IMovieDatabase
     {
         public Movie Add ( Movie movie )
         {
-            movie.Id = ++_id;
+            //TODO: Validation
+            if (movie == null)
+                return null;
 
-            _movies.Add (movie);
+            //if (!String.IsNullOrEmpty(movie.Validate()))
+            //var context = new ValidationContext(movie);
+            //var results = movie.Validate(context);
+            var results = ObjectValidator.TryValidateObject (movie);
+            if (results.Count () > 0)
+                return null;
 
-            return movie;
-            //Add to array
-            //for (var index = 0; index < _movies.Count; ++index)
-            //{
-            //    if (_movies[index] == null)
-            //    {
-            //        _movies[index] = movie;
-            //        return;
-            //    };
-            //};
+            //Name must be unique
+            var existing = GetByNameCore (movie.Title);
+            if (existing != null)
+                return null;
+
+            return AddCore (movie);
         }
 
         public void Remove ( int id )
         {
-            var movie = FindMovie (id);
-            if (movie != null)
-                _movies.Remove (movie);
+            //TODO: Validate ID
+            RemoveCore (id);
         }
 
-        public Movie Get(int id)
+        public Movie Get ( int id )
         {
-            return FindMovie (id);
+            //TODO: Validate
+            if (id <= 0)
+                return null;
+
+            return GetCore (id);
         }
 
-        public Movie[] GetAll ()
+        public IEnumerable<Movie> GetAll ()
         {
-            //Filter out empty movies
-            //var count = 0;
-            //foreach (var movie in _movies)
-            //    if (movie != null)
-            //        ++count;
-
-            var index = 0;
-            var movies = new Movie[_movies.Count];
-            foreach (var movie in _movies)
-                if (movie != null)
-                    movies[index++] = movie;
-
-            return movies;
+            return GetAllCore ();
         }
 
-        public void Update(int id, Movie newMovie)
+        public void Update ( int id, Movie newMovie )
         {
-            var existing = FindMovie (id);
-            if (existing == null)
-                return; //TODO: Error
+            //TODO: Validate
+            if (id <= 0)
+                return;
+            if (newMovie == null)
+                return;
 
-            //Update existing movie
-            existing.Description = newMovie.Description;
-            existing.HasSeen = newMovie.HasSeen;
-            existing.Rating = newMovie.Rating;
-            existing.ReleaseYear = newMovie.ReleaseYear;
-            existing.RunLength = newMovie.RunLength;
-            existing.Title = newMovie.Title;
+            //if (!String.IsNullOrEmpty(movie.Validate()))
+            //var context = new ValidationContext(newMovie);
+            //var results = newMovie.Validate(context);
+            var results = ObjectValidator.TryValidateObject (newMovie);
+            if (results.Count () > 0)
+                return;
+
+            //Must be unique
+            var existing = GetByNameCore (newMovie.Title);
+            if (existing != null && existing.Id != id)
+                return;
+
+            UpdateCore (id, newMovie);
         }
 
-        private Movie FindMovie (int id)
-        {
-            foreach (var movie in _movies)
-                if (movie.Id == id)
-                    return movie;
+        /// <summary>Add a movie to database.</summary>
+        /// <param name="movie">Movie to add.</param>
+        /// <returns>Updated movie.</returns>
+        protected abstract Movie AddCore ( Movie movie );
 
-            return null;
-        }
+        protected abstract Movie GetCore ( int id );
 
-        //private Movie[] _movies = new Movie[100];
-        private List<Movie> _movies = new List<Movie> ();
+        protected abstract IEnumerable<Movie> GetAllCore ();
 
-        //Identical to List<T>, just wrong namespace
-        // using System.Collections.ObjectModel;
-        //private Collection<Movie> _movies = new Collection<Movie>();
-        private int _id = 0;
+        protected abstract Movie GetByNameCore ( string name );
 
+        protected abstract void RemoveCore ( int id );
+
+        protected abstract Movie UpdateCore ( int id, Movie newMovie );
     }
 }

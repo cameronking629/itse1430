@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace Itse1430.MovieLib.Host
@@ -9,11 +11,20 @@ namespace Itse1430.MovieLib.Host
         public MainForm ()
         {
             InitializeComponent ();
+        }
 
-            //Itse1430.MovieLib.Movie
-            Movie movie = new Movie ();
-            movie.Title = "Jaws";
-            movie.Description = movie.Title;
+        protected override void OnLoad ( EventArgs e )
+        {
+            base.OnLoad (e);
+
+            //Seed movies
+            _movies = new MemoryMovieDatabase ();
+            var count = _movies.GetAll ().Count ();
+            if (count == 0)
+                //MovieDatabaseExtensions.Seed (_movies);
+                _movies.Seed ();
+
+            UpdateUI ();
         }
 
         //Called when Movie\Add selected
@@ -36,34 +47,39 @@ namespace Itse1430.MovieLib.Host
         {
             //return _lstMovies.SelectedItem as Movie;
             var item = _lstMovies.SelectedItem;
-            if (item == null)
-                return null;
+            //if (item == null)
+            //    return null;
 
             //Movie or null
             return item as Movie;
 
-            //Other approaches
-            //C-style cast
+            //var firstMovie = _lstMovies.SelectedItems
+            //                           .OfType<Movie>()
+            //                           .FirstOrDefault();
 
-            // (Movie)item;
+            #region Typecasting Demo
+            ////Other approaches
+            ////C-style cast
+            //(Movie)item;
 
-            //Old approach 1
+            ////Old approach 1
             //var tempVar = item as Movie;
-            //if(tempVar != null)
+            //if (tempVar != null)
             //{
             //};
 
-            //Old approach 2
-            //if(item is Movie)
+            ////Old approach 2
+            //if (item is Movie)
             //{
             //    var i = (Movie)item;
             //    //Do something with movie
-            //};
+            //}
 
-            //Pattern matching
-            //if(item is Movie movie)
+            ////Pattern matching
+            //if (item is Movie movie)
             //{
             //};
+            #endregion
         }
 
         private void OnMovieEdit ( object sender, EventArgs e )
@@ -85,25 +101,25 @@ namespace Itse1430.MovieLib.Host
 
         private void OnMovieDelete ( object sender, EventArgs e )
         {
-            //Demo
-            var menuItem = sender as Button;
-            //This will crash if menuItem is null
-            //var text = menuItem.Text;
+            #region Playing with null
+            //var menuItem = sender as Button;
+            ////This will crash if menuItem is null
+            ////var text = menuItem.Text;
 
-            //Handle null - as statement
-            var text = "";
-            if (menuItem != null)
-                text = menuItem.Text;
-            else
-                text = "";
+            ////Handle null - as statement
+            //var text = "";
+            //if (menuItem != null)
+            //    text = menuItem.Text;
+            //else
+            //    text = "";
 
-            //As expression
-            var text2 = (menuItem != null) ? menuItem.Text : "";
+            ////As expression
+            //var text2 = (menuItem != null) ? menuItem.Text : "";
 
-            //Null coalescing = menuItem ?? "";
-            //Null conditional operator
-            var text3 = menuItem?.Text ?? "";
-
+            ////Null coalescing menuItem ?? "";
+            ////Null conditional operator
+            //var text3 = menuItem?.Text ?? "";
+            #endregion
 
             var movie = GetSelectedMovie ();
             if (movie == null)
@@ -131,20 +147,58 @@ namespace Itse1430.MovieLib.Host
             form.ShowDialog (this);
         }
 
+        //private string OrderByTitle(Movie movie)
+        //{
+        //    return movie.Title;
+        //}
+        //private int OrderByReleaseYear(Movie movie)
+        //{
+        //    return movie.ReleaseYear;
+        //}
+
         private void UpdateUI ()
         {
-            var movies = _movies.GetAll ();
+            var movies = _movies.GetAll ()
+                                //.OrderBy (OrderByTitle)
+                                .OrderBy (m => m.Title)
+                                //.ThenBy (OrderByReleaseYear);
+                                .ThenBy (m => m.ReleaseYear);
+
+            PlayWithEnumerable (movies);
+
             //Programmatic approach
-            //_lstMovies.Items.Clear ();
-            //_lstMovies.Items.AddRange (movies);
+            //_lstMovies.Items.Clear();
+            //_lstMovies.Items.AddRange(movies);
 
             //For more complex bindings
-            _lstMovies.DataSource = movies;
+            _lstMovies.DataSource = movies.ToArray ();
         }
 
+        private void PlayWithEnumerable(IEnumerable<Movie> movies)
+        {
+            Movie firstOne = movies.FirstOrDefault ();
+            Movie lastOne = movies.LastOrDefault ();
+            //Movie onlyOne = movies.SingleOrDefault ();
 
+            //var coolMovies = movies.Where (m => m.ReleaseYear > 1979
+            //                                && m.ReleaseYear < 2000);
 
-        private MovieDatabase _movies = new MovieDatabase ();
+            int id = 1;
+            //var otherMovies = movies.Where (m => m.Id > ++id);
+            var temp1 = new NestedType { id = id };
+            var OtherMovies = movies.Where (temp1.WhereCondition);
+            var lastId = id;
+        }
+        
+        private sealed class NestedType
+        {
+            public int id { get; set; }
+            public bool WhereCondition ( Movie m )
+            {
+                return m.Id > ++id;
+            }
+        }
+
+        private IMovieDatabase _movies;
     }
 }
-
